@@ -1,6 +1,6 @@
 const { verifyToken } = require("../utils/jwt");
 
-exports.authMiddleware = (req, res, next) => {
+exports.auth = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer "))
