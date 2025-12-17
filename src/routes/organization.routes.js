@@ -2,8 +2,8 @@ const express = require("express");
 const router = express.Router();
 
 const OrganizationController = require("../controllers/organization.controller");
-const auth = require("../middlewares/auth.middleware");
-const allowRoles = require("../middlewares/role.middleware");
+const { auth } = require("../middlewares/auth.middleware");
+const { allowRoles } = require("../middlewares/role.middleware");
 
 router.post(
   "/",
