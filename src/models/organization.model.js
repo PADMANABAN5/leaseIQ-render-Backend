@@ -12,7 +12,10 @@ class OrganizationModel {
     };
 
     const result = await getDB().collection(COLLECTION).insertOne(payload);
-    return result.insertedId;
+    return {
+      _id: result.insertedId,
+      name: payload.name,
+    };
   }
 
   static async getAll({ page = 1, limit = 10 }) {

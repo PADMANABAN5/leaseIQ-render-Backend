@@ -3,11 +3,17 @@ const OrganizationModel = require("../models/organization.model");
 class OrganizationController {
   static async create(req, res) {
     try {
-      const id = await OrganizationModel.create(req.body);
-      return res.status(201).json({ id });
+      const org = await OrganizationModel.create(req.body);
+
+      return res.status(201).json({
+        message: "Organization created successfully",
+        data: org,
+      });
     } catch (err) {
-      console.error("Organization Create Error:", err);
-      return res.status(500).json({ error: "Failed to create organization" });
+      console.error("❌ Organization Create Error:", err);
+      return res.status(500).json({
+        message: "Failed to create organization",
+      });
     }
   }
 
