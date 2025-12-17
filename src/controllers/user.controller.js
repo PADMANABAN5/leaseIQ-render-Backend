@@ -1,10 +1,11 @@
 const bcrypt = require("bcryptjs");
 const UserModel = require("../models/user.model");
+const RoleModel = require("../models/role.model");
 
 class UserController {
   static async create(req, res) {
     try {
-      const { name, email, password, role_id, organization_id } = req.body;
+      const { name, email, password, role_name, organization_id } = req.body;
 
       const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -13,11 +14,23 @@ class UserController {
           ? req.user.organization_id
           : organization_id;
 
+      const role = await RoleModel.getByName(role_name);
+
+      if (!role) {
+        return res.status(400).json({ error: "Invalid role" });
+      }
+
+      if (req.user.role === "org_admin" && role_name !== "user") {
+        return res
+          .status(403)
+          .json({ error: "Org admin can only create users" });
+      }
+
       const id = await UserModel.create({
         name,
         email,
         password: hashedPassword,
-        role_id,
+        role_id: role._id,
         organization_id: orgId,
       });
 
