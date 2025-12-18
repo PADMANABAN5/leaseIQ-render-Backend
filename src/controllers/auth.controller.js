@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const connectDB = require("../config/db");
+const { connectDB } = require("../config/db");
 const { generateToken } = require("../utils/jwt");
 const { ObjectId } = require("mongodb");
 
