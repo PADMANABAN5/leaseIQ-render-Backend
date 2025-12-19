@@ -570,10 +570,10 @@ async function getCamSingle(req, res) {
     const lastFilePath = path.join(folderPath, lastFile);
     if (fs.existsSync(lastFilePath)) {
       const data = JSON.parse(fs.readFileSync(lastFilePath, "utf8"));
-      return res.json({ tokens: [inputTokens, outputTokens], data });
+      return res.json({ data });
     }
 
-    return res.json({ tokens: [inputTokens, outputTokens] });
+    // return res.json({ tokens: [inputTokens, outputTokens] });
   } catch (error) {
     console.error("Error in getCamSingle:", error);
     return res.status(500).json({

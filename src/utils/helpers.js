@@ -134,10 +134,291 @@ async function contentFromDoc(infoList) {
         """
 
     `, 
-    ``,
-    ``,
-    ``,
-    ``,
+    `## space
+The main container object that holds all specific details about the physical space being leased.
+
+### unit
+This object identifies the specific suite or unit number within the building.
+* **value**: The identifier for the unit (e.g., "Suite 450", "Unit 3B").
+* **citation**: The page number in the PDF where this unit is mentioned.
+* **amendments**: A list of any changes to the unit's designation.
+
+### building
+This object contains the name or identifier of the building where the unit is located.
+* **value**: The official name or number of the building (e.g., "The Apex Tower", "Building C").
+* **citation**: The page number where the building is identified.
+* **amendments**: A list of any changes to the building's name or identifier.
+
+### floor
+This object specifies the floor on which the leased space is located.
+* **value**: The floor level (e.g., "12th Floor", "Mezzanine").
+* **citation**: The page number where the floor is mentioned.
+* **amendments**: A list of any updates related to the floor designation.
+
+### areaRentable
+This object describes the rentable area, which typically includes the usable area plus a portion of the building's common spaces.
+* **value**: The total rentable square footage or meters (e.g., "10,000 sq ft").
+* **citation**: The page number specifying the rentable area.
+* **amendments**: A list of any recalculations or changes to the rentable area.
+
+### areaUsable
+This object describes the usable area, which is the actual space exclusively occupied by the tenant.
+* **value**: The total usable square footage or meters (e.g., "9,200 sq ft").
+* **citation**: The page number specifying the usable area.
+* **amendments**: A list of any recalculations or changes to the usable area.
+
+### status
+This object indicates the current status of the space.
+* **value**: The current availability or condition (e.g., "Occupied", "Available for Lease", "Under Renovation").
+* **citation**: The page number where the status is mentioned.
+* **amendments**: A list of any changes to the space's status over time.
+
+### notes
+This object is for any additional, miscellaneous information about the space.
+* **value**: Any relevant notes or comments (e.g., "Space includes a private balcony", "As-is condition").
+* **citation**: The page number where these notes are found.
+* **amendments**: A list of any updates or additions to the notes.
+    `,
+    `
+    ## chargeSchedules
+    The main container object that holds all information about payment schedules, including recurring charges like base rent and conditional charges like late fees.
+
+    ### baseRent
+    An **array of objects**, where each object represents a specific period in the rent schedule. This structure allows for rent escalations over the lease term.
+
+    #### Fields within each \`baseRent\` object:
+    * **chargeCode**: An internal code used to classify this type of charge.
+    * **description**: A plain-text description of the rent period.
+    * **dateFrom**: The start date for this specific rent amount.
+    * **dateTo**: The end date for this specific rent amount.
+    * **monthlyAmount**: The total rent due each month during this period.
+    * **annualAmount**: The total rent for a full year during this period.
+    * **areaRentable**: The rentable area used for this calculation.
+    * **amountPerArea**: The rent calculated on a per-unit-area basis (e.g., per square foot).
+    * **managementFees**: Any management fees included in or associated with the base rent.
+    * **amendments**: A list of any modifications that apply to this specific rent period.
+
+    ### lateFee
+    This object defines the rules and penalties for overdue payments.
+    * **calculationType**: The method used to determine the initial late fee (e.g., "Fixed Amount", "Percentage of Overdue Amount").
+    * **graceDays**: The number of days after the due date before a late fee is charged.
+    * **percent**: The percentage applied if \`calculationType\` is based on a percentage.
+    * **secondFeeCalculationType**: The method for calculating a subsequent or secondary late fee.
+    * **secondFeeGrace**: The number of additional days before the second late fee is applied.
+    * **secondFeePercent**: The percentage for the second late fee, if applicable.
+    * **perDayFee**: A fixed amount charged for each day the payment remains overdue.
+
+
+    `,
+    `
+        ## otherLeaseProvisions
+        The main container object for various clauses, conditions, and special provisions detailed in the lease agreement. This section covers topics beyond the primary financial and space definitions.
+
+        ---
+
+        ### Common Field Definitions
+        Many sections below share a common structure. Here's what those fields represent:
+        * **synopsis**: A concise summary of the key points of the lease clause.
+        * **keyParameters**: Specific data points extracted from the clause, such as dates, amounts, percentages, or other critical terms.
+        * **narrative**: The full, verbatim text of the clause as it appears in the lease document.
+        * **definition**: The specific legal definition of a term as provided by the lease (e.g., what qualifies as a "Tax" or "Operating Expense").
+        * **citation**: The page number in the source document where the information is located.
+        * **amendments**: A list of any modifications or changes that apply to that specific piece of information.
+
+        ---
+
+        ### premisesAndTerm
+        Defines the leased property and the duration of the lease agreement.
+        * **synopsis**, **keyParameters**, **narrative**
+
+        ### taxes
+        Details the tenant's and landlord's responsibilities regarding property taxes.
+        * **synopsis**, **definition**, **keyParameters**, **narrative**
+
+        ### operatingExpenses
+        Details responsibilities for common area maintenance (CAM) and other shared building costs.
+        * **synopsis**, **definition**, **keyParameters**, **narrative**
+        * **billingTimeline**: The schedule and process for billing and reconciling operating expenses.
+        * **formulas**: The specific calculation used to determine the tenant's share of expenses.
+        * **capitalRules**: Rules defining if and how capital improvements can be included in operating expenses passed through to the tenant.
+
+        ### repairsAndMaintenance
+        Outlines who is responsible for repairing and maintaining different parts of the premises and building.
+        * **synopsis**, **narrative**
+
+        ### alterations
+        Specifies the tenant's rights and restrictions for making physical changes or improvements to the leased space.
+        * **synopsis**
+
+        ### signs
+        Governs the tenant's rights to place signage on the property, including rules on size, location, and appearance.
+        * **synopsis**
+
+        ### services
+        Lists the services the landlord is obligated to provide, such as HVAC, electricity, water, and janitorial services.
+        * **synopsis**
+
+        ### insurance
+        Details the insurance coverage types and limits required for both the tenant and the landlord.
+        * **synopsis**, **keyParameters**
+
+        ### casualty
+        Describes the procedures, rights, and obligations of both parties if the property is damaged or destroyed by events like a fire or natural disaster.
+        * **synopsis**
+
+        ### liabilityAndIndemnification
+        Defines who is legally and financially responsible for injuries, damages, or lawsuits arising from incidents on the property.
+        * **synopsis**
+
+        ### use
+        Specifies the permitted and prohibited uses of the leased premises by the tenant.
+        * **synopsis**
+
+        ### landlordsRightOfEntry
+        Outlines the conditions under which the landlord can enter the tenant's space (e.g., for inspections, repairs, or showing the property).
+        * **synopsis**
+
+        ### assignmentAndSubletting
+        Defines the tenant's ability to transfer the lease to another party (assignment) or lease a portion of their space to another entity (subletting).
+        * **synopsis**
+
+        ### parking
+        Details the tenant's parking rights, including the number of spaces, location, and any associated costs.
+        * **synopsis**
+
+        ### condemnation
+        Specifies the rights of the tenant and landlord if the property is acquired by a government entity through eminent domain.
+        * **synopsis**
+
+        ### holdover
+        Describes the terms and financial penalties if the tenant remains in the space after the lease term has expired.
+        * **synopsis**
+
+        ### quietEnjoyment
+        A covenant that grants the tenant the right to use the property without interference from the landlord.
+        * **synopsis**
+
+        ### defaultAndRemedies
+        Outlines what constitutes a breach of the lease by either party and the actions the non-breaching party can take in response.
+        * **synopsis**
+
+        ### subordination
+        Addresses the priority of the lease relative to the landlord's mortgage lender, often including non-disturbance and attornment provisions (SNDA).
+        * **synopsis**
+
+        ### liens
+        Prohibits the tenant from allowing legal claims (liens) to be placed on the property, typically by contractors or suppliers.
+        * **synopsis**
+
+        ### hazardousMaterials
+        Governs the use, storage, and disposal of hazardous materials on the premises.
+        * **synopsis**
+
+        ### rulesAndRegulations
+        Refers to the general building rules and regulations that the tenant must adhere to.
+        * **synopsis**
+
+        ### brokerage
+        Identifies the real estate brokers involved in the lease transaction and outlines commission agreements.
+        * **synopsis**
+
+        ### estoppel
+        Describes the tenant's obligation to sign an estoppel certificate, a document that confirms the current terms of the lease for a third party, like a new owner or lender.
+        * **synopsis**
+
+        ### notices
+        Specifies the official methods and addresses for sending legal notices between the tenant and landlord.
+        * **synopsis**
+
+        ### rightOfFirstRefusalOffer
+        Details any right the tenant may have to match an offer to buy the property or lease additional space before it is offered to others.
+        * **synopsis**
+
+        ### expansionAndRelocation
+        Outlines any rights the tenant has to expand into additional space or any obligation to relocate to a different space within the property at the landlord's request.
+        * **synopsis**
+
+        ### landlordDefault
+        Specifies the tenant's remedies if the landlord fails to meet their obligations under the lease.
+        * **synopsis**
+
+    `,
+    `
+    Lease Executive Summary Generation Guidelines
+
+    Read the entire lease word by word and generate a concise Executive Summary (130–150 words) describing the lease in clear, factual language suitable for a professional lease abstraction.
+
+    1. Narrative Summary (1–2 paragraphs)
+    Provide a cohesive overview that highlights:
+
+    Tenant and Landlord names
+    Premises location, floor, rentable and usable square footage
+    Lease term (start and end dates) and renewal options
+    Base rent and escalation schedule
+    Tenant improvement allowance, parking, or other financial incentives
+    Delivery condition (e.g., Core & Shell, As-Is) and permitted use
+    Responsibilities of each party (maintenance, utilities, insurance, janitorial, repairs)
+    Any notable provisions such as holdover rent, indemnities, signage rights, environmental restrictions, or unique rules and regulations
+
+    The summary should capture and synthesize all major terms — business, financial, operational, legal, compliance, risk, performance, and any other obligation or impact that defines the relationship between the parties or affects cost, rights, or exposure.
+    Avoid quoting or restating clauses; use concise, factual, businesslike language to provide a clear snapshot of the deal.
+
+    2. Summary of Key Metrics
+    After the narrative, include two clearly labeled tables:
+    a. Summary of Key Metrics
+    Capture all factual, static, quantitative, and qualitative deal terms that define the financial, operational, compliance, and performance aspects of the lease, including but not limited to:
+
+    Parties: Tenant and Landlord names and relationships.
+    Premises: Full address, rentable and usable square footage, floor, suite, and building name if provided.
+    Term Structure: Commencement date, expiration date, and total term length; mention extensions, early termination, or renewal options.
+    Rent Economics: Starting base rent (per RSF or per month), escalation schedule, and total or ending rent if calculable. Note any additional rent components such as operating expenses, taxes, or CAM obligations.
+    Financial Incentives: Tenant Improvement Allowance, rent abatements, parking entitlements, and any free-rent periods.
+    Occupancy & Delivery: Delivery condition (Core & Shell, As-Is, etc.) and required build-out standards or exhibits.
+    Operational Terms: Use clause (purpose of premises), maintenance and repair responsibility split, and any proportionate share defined.
+    Responsibilities: Summarize which party (Landlord or Tenant) is responsible for structural repairs, maintenance, janitorial services, utilities, insurance, and compliance obligations.
+    Key Provisions: Distinctive clauses affecting risk or cost, such as holdover rent, indemnity, signage rights, environmental or energy restrictions, or insurance obligations.
+    Special Rules & Restrictions: Reference exhibits or attachments (e.g., Rules & Regulations, prohibited uses, smoking restrictions, corridor door requirements, waste management).
+
+    b. Summary of Conditional Dependencies and Impacts
+    Capture all conditional, formulaic, or event-driven terms — financial or otherwise — where amounts, rights, obligations, or outcomes depend on specific actions, circumstances, or events, such as:
+
+    Rent recalculations on renewal, CPI, or market resets
+    Expense caps or controllable-expense definitions
+    Pass-through or reimbursement formulas (e.g., CAM, taxes, insurance)
+    Operational, compliance, or performance triggers (e.g., energy targets, maintenance lapses, occupancy thresholds)
+    Default or termination conditions, penalties, or credits tied to milestones or external approvals
+    Regulatory or event-based dependencies (e.g., damage, casualty, force majeure, law changes, anchor-tenant clauses, or government actions)
+
+    Each entry should specify the event or trigger, affected item or obligation, and resulting calculation, consequence, or dependency (e.g., "CPI Adjustment = Base Rent × [Current CPI ÷ Base CPI]" or "If anchor tenant vacates → Tenant termination right within 90 days").
+
+    Tone & Formatting
+
+    Neutral, factual, and businesslike — avoid legalese or quoting full clauses.
+    Begin with a heading: Executive Summary
+    Then include the two tables in this order:
+
+    Summary of Key Metrics
+    Summary of Conditional Dependencies and Impacts
+
+    Table Structures
+
+    Table 1 Format:
+    ItemDetails
+
+    Table 2 Format:
+    Trigger / ConditionAffected Item or ObligationConsequence / Formula / Impact
+
+    Objective Alignment
+
+    Summary of Key Metrics → captures everything that is fixed, factual, or defined upfront — across financial, operational, legal, compliance, and performance domains.
+
+    Summary of Conditional Dependencies and Impacts → captures everything that changes, depends, or triggers downstream impact — across any domain (financial, operational, compliance, legal, performance, or risk).
+
+    IMPORTANT NOTE : MAKE SURE THAT THE EXECUTIVE SUMMARY YOU PROVIDE IS A MARKDOWN WITH BULLETED POINTS
+
+
+
+    `,
     `
 
         # Commercial and Industrial Lease Analysis Expert
