@@ -14,7 +14,7 @@ class UserController {
       let finalUsername;
       if(username && username.trim()){
         const normalizedUsername = username.toLowerCase();
-
+        
         const existingUser = await UserModel.getByUsername(normalizedUsername);
         if (existingUser) {
           return res.status(400).json({ error: "Username already exists" });
