@@ -5,15 +5,27 @@ const { ObjectId } = require("mongodb");
 
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, username,password } = req.body;
 
-    if (!email || !password)
-      return res.status(400).json({ message: "Email and password required" });
+    if ((!email && !username) || !password)
+      return res.status(400).json({ message: "Email or username and password required" });
 
     const db = await connectDB();
+    let user;
 
-    const user = await db.collection("users").findOne({ email });
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    if (email) {
+      user = await db.collection("users").findOne({
+        email: email.toLowerCase(),
+      });
+    } else {
+      user = await db.collection("users").findOne({
+        username: username.toLowerCase(),
+      });
+    }
+    
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
