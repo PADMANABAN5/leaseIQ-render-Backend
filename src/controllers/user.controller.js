@@ -5,7 +5,36 @@ const RoleModel = require("../models/role.model");
 class UserController {
   static async create(req, res) {
     try {
-      const { name, email, password, role_name, organization_id } = req.body;
+      const { name, email, username,password, role_name, organization_id } = req.body;
+      if(!email && !username) {
+        return res.status(400).json({
+          error: "Either email or username is required",
+        });
+      }
+      let finalUsername;
+      if(username && username.trim()){
+        const normalizedUsername = username.toLowerCase();
+        
+        const existingUser = await UserModel.getByUsername(normalizedUsername);
+        if (existingUser) {
+          return res.status(400).json({ error: "Username already exists" });
+        }
+        finalUsername=normalizedUsername;        
+      }else{
+        finalUsername=await UserModel.generateUsername();;
+      }
+
+      if (email) {
+        const existingEmail = await UserModel.getByEmail(email);
+        if (existingEmail) {
+          return res.status(400).json({ error: "Email already exists" });
+        }
+      }
+      
+
+      if (!password) {
+        return res.status(400).json({ error: "Password is required" });
+      }
 
       const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -13,7 +42,7 @@ class UserController {
         req.user.role === "org_admin"
           ? req.user.organization_id
           : organization_id;
-
+       
       const role = await RoleModel.getByName(role_name);
 
       if (!role) {
@@ -29,6 +58,7 @@ class UserController {
       const id = await UserModel.create({
         name,
         email,
+        username: finalUsername,
         password: hashedPassword,
         role_id: role._id,
         organization_id: orgId,
