@@ -9,7 +9,10 @@ const LeaseDocumentModel = require("../models/leaseDocument.model");
 
 class PortfolioController {
   static async build(req, res) {
-    const session = getDB().client.startSession();
+    const db = getDB();
+    const session = db.client.startSession();
+
+    let uploadedFilePath = null;
 
     try {
       const {
@@ -67,7 +70,8 @@ class PortfolioController {
         session
       );
 
-      const filePath = await storage.uploadFile({
+      // Upload Document (OUTSIDE DB, must track for rollback)
+      uploadedFilePath = await storage.uploadFile({
         buffer: req.file.buffer,
         filename: req.file.originalname,
         mimetype: req.file.mimetype,
@@ -79,7 +83,7 @@ class PortfolioController {
           lease_id: lease.insertedId,
           document_name: req.file.originalname,
           document_type,
-          file_path: filePath,
+          file_path: uploadedFilePath,
         },
         session
       );
@@ -91,6 +95,16 @@ class PortfolioController {
       });
     } catch (err) {
       await session.abortTransaction();
+
+      // STORAGE ROLLBACK
+      if (uploadedFilePath) {
+        try {
+          await storage.deleteFile(uploadedFilePath);
+        } catch (cleanupErr) {
+          console.error("Storage rollback failed:", cleanupErr);
+        }
+      }
+
       console.error("Portfolio Build Error:", err);
       return res.status(500).json({ error: "Failed to build portfolio" });
     } finally {

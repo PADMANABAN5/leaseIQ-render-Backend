@@ -14,3 +14,8 @@ exports.uploadFile = async ({ buffer, filename, mimetype }) => {
 
   return filePath;
 };
+
+exports.deleteFile = async (filePath) => {
+  const file = bucket.file(filePath);
+  await file.delete({ ignoreNotFound: true });
+};

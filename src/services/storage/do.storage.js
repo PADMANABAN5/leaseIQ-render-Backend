@@ -21,3 +21,12 @@ exports.uploadFile = async ({ buffer, filename, mimetype }) => {
 
   return key;
 };
+
+exports.deleteFile = async (key) => {
+  await s3
+    .deleteObject({
+      Bucket: process.env.DO_SPACES_BUCKET,
+      Key: key,
+    })
+    .promise();
+};
