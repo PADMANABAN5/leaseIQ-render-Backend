@@ -7,6 +7,8 @@ const TenantModel = require("../models/tenant.model");
 const LeaseModel = require("../models/lease.model");
 const LeaseDocumentModel = require("../models/leaseDocument.model");
 
+const ALLOWED_DOCUMENT_TYPES = ["main lease", "amendment"];
+
 class PortfolioController {
   static async build(req, res) {
     const db = getDB();
@@ -30,6 +32,12 @@ class PortfolioController {
 
       if (!req.file) {
         return res.status(400).json({ error: "Document is required" });
+      }
+
+      if (!ALLOWED_DOCUMENT_TYPES.includes(document_type)) {
+        return res.status(400).json({
+          error: "document_type must be either 'main lease' or 'amendment'",
+        });
       }
 
       session.startTransaction();
