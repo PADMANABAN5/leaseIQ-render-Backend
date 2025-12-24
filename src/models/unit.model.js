@@ -11,6 +11,7 @@ class UnitModel {
           property_id: new ObjectId(data.property_id),
           unit_number: data.unit_number,
           square_ft: data.square_ft || null,
+          monthly_rent: data.monthly_rent || null,
           created_at: new Date(),
         },
         { session }

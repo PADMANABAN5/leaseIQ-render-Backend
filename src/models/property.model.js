@@ -16,6 +16,24 @@ class PropertyModel {
         { session }
       );
   }
+
+  // GET ALL PROPERTIES FOR USER
+  static getByUser(user_id) {
+    return getDB()
+      .collection(COLLECTION)
+      .find({ user_id: new ObjectId(user_id) })
+      .sort({ created_at: -1 })
+      .toArray();
+  }
+
+  static getById(property_id, user_id) {
+    return getDB()
+      .collection(COLLECTION)
+      .findOne({
+        _id: new ObjectId(property_id),
+        user_id: new ObjectId(user_id),
+      });
+  }
 }
 
 module.exports = PropertyModel;
