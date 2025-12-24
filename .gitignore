@@ -9,7 +9,7 @@
 cam_result/
 # Dependencies
 node_modules
-
+cached_pdfs/
 # Other sensitive files
 secret.js
 init-user.js

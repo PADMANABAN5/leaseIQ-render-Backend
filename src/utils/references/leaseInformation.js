@@ -5,6 +5,11 @@ const structure = {
       citation: "", // page at which in the pdf is reasoning present
       amendments: [], //
     },
+    securityDeposit: {
+      value: "",
+      citation: "",
+      amendments: [],
+    },
     property: {
       value: "",
       citation: "",
