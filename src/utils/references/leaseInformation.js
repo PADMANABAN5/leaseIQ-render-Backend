@@ -5,11 +5,6 @@ const structure = {
       citation: "", // page at which in the pdf is reasoning present
       amendments: [], //
     },
-    securityDeposit: {
-      value: "",
-      citation: "",
-      amendments: [],
-    },
     property: {
       value: "",
       citation: "",
@@ -25,7 +20,28 @@ const structure = {
       citation: "",
       amendments: [],
     },
+    squareFeet: {
+      value: "",
+      citation: "",
+      amendments: [],
+    },
+    baseRent: {
+      value: "",
+      citation: "",
+      amendments: [],
+    },
+    securityDeposit: {
+      value: "",
+      citation: "",
+      amendments: [],
+    },
+    renewalOptions: {
+      value: "",
+      citation: "",
+      amendments: [],
+    },
   },
+
 };
 
 const field_description = `
