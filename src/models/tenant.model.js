@@ -15,6 +15,12 @@ class TenantModel {
       );
   }
 
+  static async getById(id) {
+    return getDB()
+      .collection(COLLECTION)
+      .findOne({ _id: new ObjectId(id) });
+  }
+
   static async getTenantSummaryByUser(user_id) {
     return getDB()
       .collection(COLLECTION)
