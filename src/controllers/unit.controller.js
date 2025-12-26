@@ -15,7 +15,9 @@ class UnitController {
   static async createWithLease(req, res) {
     const db = getDB();
     const session = db.client.startSession();
+
     let uploadedFilePath = null;
+    let transactionStarted = false;
 
     try {
       let {
@@ -36,7 +38,8 @@ class UnitController {
         lease_details = JSON.parse(lease_details);
       }
 
-      // VALIDATIONS
+      //Validations
+
       if (!unit_number) {
         return res.status(400).json({ error: "unit_number is required" });
       }
@@ -64,18 +67,21 @@ class UnitController {
       }
 
       session.startTransaction();
+      transactionStarted = true;
 
-      // PROPERTY
       let propertyId;
 
       if (property_id) {
-        const property = await db.collection("properties").findOne({
-          _id: new ObjectId(property_id),
-          user_id: new ObjectId(req.user.user_id),
-        });
+        const property = await db.collection("properties").findOne(
+          {
+            _id: new ObjectId(property_id),
+            user_id: new ObjectId(req.user.user_id),
+          },
+          { session }
+        );
 
         if (!property) {
-          return res.status(403).json({ error: "Invalid property access" });
+          throw new Error("Invalid property access");
         }
 
         propertyId = property._id;
@@ -91,17 +97,19 @@ class UnitController {
         propertyId = property.insertedId;
       }
 
-      // TENANT
       let tenantId;
 
       if (tenant_id) {
-        const tenant = await db.collection("tenants").findOne({
-          _id: new ObjectId(tenant_id),
-          user_id: new ObjectId(req.user.user_id),
-        });
+        const tenant = await db.collection("tenants").findOne(
+          {
+            _id: new ObjectId(tenant_id),
+            user_id: new ObjectId(req.user.user_id),
+          },
+          { session }
+        );
 
         if (!tenant) {
-          return res.status(403).json({ error: "Invalid tenant access" });
+          throw new Error("Invalid tenant access");
         }
 
         tenantId = tenant._id;
@@ -116,7 +124,6 @@ class UnitController {
         tenantId = tenant.insertedId;
       }
 
-      // UNIT
       const unit = await UnitModel.create(
         {
           user_id: req.user.user_id,
@@ -128,7 +135,6 @@ class UnitController {
         session
       );
 
-      // LEASE
       const lease = await LeaseModel.create(
         {
           user_id: req.user.user_id,
@@ -138,7 +144,8 @@ class UnitController {
         session
       );
 
-      // LEASE DETAILS
+      /* ---------------- LEASE DETAILS ---------------- */
+
       await LeaseDetailModel.create(
         {
           user_id: req.user.user_id,
@@ -148,7 +155,6 @@ class UnitController {
         session
       );
 
-      // DOCUMENT UPLOAD
       uploadedFilePath = await storage.uploadFile({
         buffer: req.file.buffer,
         filename: req.file.originalname,
@@ -178,7 +184,9 @@ class UnitController {
         },
       });
     } catch (err) {
-      await session.abortTransaction();
+      if (transactionStarted) {
+        await session.abortTransaction();
+      }
 
       // STORAGE ROLLBACK
       if (uploadedFilePath) {
@@ -189,8 +197,10 @@ class UnitController {
         }
       }
 
-      console.error("Unit Create Error:", err);
-      return res.status(500).json({ error: "Failed to create unit" });
+      console.error("Unit Create Error:", err.message || err);
+      return res
+        .status(500)
+        .json({ error: err.message || "Failed to create unit" });
     } finally {
       session.endSession();
     }

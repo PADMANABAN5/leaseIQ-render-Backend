@@ -16,9 +16,10 @@ class PortfolioController {
     const session = db.client.startSession();
 
     let uploadedFilePath = null;
+    let transactionStarted = false;
 
     try {
-      const {
+      let {
         property_name,
         address,
         unit_number,
@@ -28,7 +29,7 @@ class PortfolioController {
         lease_details,
       } = req.body;
 
-      // Parse lease_details (multipart/form-data sends string)
+      // multipart/form-data → JSON string
       if (typeof lease_details === "string") {
         lease_details = JSON.parse(lease_details);
       }
@@ -38,12 +39,12 @@ class PortfolioController {
       }
 
       if (!req.file) {
-        return res.status(400).json({ error: "Document is required" });
+        return res.status(400).json({ error: "Lease document is required" });
       }
 
       if (!ALLOWED_DOCUMENT_TYPES.includes(document_type)) {
         return res.status(400).json({
-          error: "document_type must be either 'main lease' or 'amendment'",
+          error: "document_type must be 'main lease' or 'amendment'",
         });
       }
 
@@ -53,11 +54,8 @@ class PortfolioController {
         });
       }
 
-      if (!req.file) {
-        return res.status(400).json({ error: "Lease document is required" });
-      }
-
       session.startTransaction();
+      transactionStarted = true;
 
       const property = await PropertyModel.create(
         {
@@ -104,7 +102,6 @@ class PortfolioController {
         session
       );
 
-      // Upload Document (OUTSIDE DB, must track for rollback)
       uploadedFilePath = await storage.uploadFile({
         buffer: req.file.buffer,
         filename: req.file.originalname,
@@ -126,9 +123,22 @@ class PortfolioController {
 
       return res.status(201).json({
         message: "Portfolio created successfully",
+        data: {
+          property_id: property.insertedId,
+          unit_id: unit.insertedId,
+          tenant_id: tenant.insertedId,
+          lease_id: lease.insertedId,
+        },
       });
     } catch (err) {
-      await session.abortTransaction();
+      // Abort ONLY if transaction started
+      if (transactionStarted) {
+        try {
+          await session.abortTransaction();
+        } catch (abortErr) {
+          console.error("Transaction abort failed:", abortErr);
+        }
+      }
 
       // STORAGE ROLLBACK
       if (uploadedFilePath) {
