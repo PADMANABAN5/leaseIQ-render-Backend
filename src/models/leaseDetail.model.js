@@ -4,7 +4,6 @@ const { ObjectId } = require("mongodb");
 const COLLECTION = "lease_details";
 
 class LeaseDetailModel {
-  // CREATE
   static create(data, session) {
     return getDB()
       .collection(COLLECTION)
@@ -20,7 +19,6 @@ class LeaseDetailModel {
       );
   }
 
-  // GET BY LEASE
   static getByLeaseId(lease_id, user_id) {
     return getDB()
       .collection(COLLECTION)
@@ -30,8 +28,7 @@ class LeaseDetailModel {
       });
   }
 
-  // UPDATE
-  static updateByLeaseId(lease_id, user_id, details) {
+  static updateByLeaseId(lease_id, user_id, details, session) {
     return getDB()
       .collection(COLLECTION)
       .updateOne(
@@ -44,11 +41,11 @@ class LeaseDetailModel {
             details,
             updated_at: new Date(),
           },
-        }
+        },
+        { session }
       );
   }
 
-  // DELETE
   static deleteByLeaseId(lease_id, user_id, session) {
     return getDB()
       .collection(COLLECTION)
@@ -59,14 +56,6 @@ class LeaseDetailModel {
         },
         { session }
       );
-  }
-
-  // SEARCH (future use)
-  static search(user_id, query = {}) {
-    return getDB()
-      .collection(COLLECTION)
-      .find({ user_id: new ObjectId(user_id), ...query })
-      .toArray();
   }
 }
 
