@@ -18,7 +18,7 @@ class UnitController {
     let uploadedFilePath = null;
 
     try {
-      const {
+      let {
         property_id,
         property_name,
         address,
@@ -31,6 +31,12 @@ class UnitController {
         lease_details,
       } = req.body;
 
+      // Parse lease_details (multipart/form-data sends string)
+      if (typeof lease_details === "string") {
+        lease_details = JSON.parse(lease_details);
+      }
+
+      // VALIDATIONS
       if (!unit_number) {
         return res.status(400).json({ error: "unit_number is required" });
       }
@@ -43,7 +49,7 @@ class UnitController {
 
       if (!ALLOWED_DOCUMENT_TYPES.includes(document_type)) {
         return res.status(400).json({
-          error: "Not a valid document_type",
+          error: "document_type must be 'main lease' or 'amendment'",
         });
       }
 
@@ -53,9 +59,13 @@ class UnitController {
         });
       }
 
+      if (!req.file) {
+        return res.status(400).json({ error: "Lease document is required" });
+      }
+
       session.startTransaction();
 
-      //PROPERTY
+      // PROPERTY
       let propertyId;
 
       if (property_id) {
@@ -81,7 +91,7 @@ class UnitController {
         propertyId = property.insertedId;
       }
 
-      //TENANT
+      // TENANT
       let tenantId;
 
       if (tenant_id) {
@@ -106,7 +116,7 @@ class UnitController {
         tenantId = tenant.insertedId;
       }
 
-      //UNIT
+      // UNIT
       const unit = await UnitModel.create(
         {
           user_id: req.user.user_id,
@@ -138,7 +148,7 @@ class UnitController {
         session
       );
 
-      //DOCUMENT UPLOAD
+      // DOCUMENT UPLOAD
       uploadedFilePath = await storage.uploadFile({
         buffer: req.file.buffer,
         filename: req.file.originalname,

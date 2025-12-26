@@ -28,6 +28,11 @@ class PortfolioController {
         lease_details,
       } = req.body;
 
+      // Parse lease_details (multipart/form-data sends string)
+      if (typeof lease_details === "string") {
+        lease_details = JSON.parse(lease_details);
+      }
+
       if (!property_name || !unit_number || !tenant_name || !document_type) {
         return res.status(400).json({ error: "Missing required fields" });
       }
@@ -46,6 +51,10 @@ class PortfolioController {
         return res.status(400).json({
           error: "lease_details is required and must be an object",
         });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: "Lease document is required" });
       }
 
       session.startTransaction();
