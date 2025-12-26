@@ -6,6 +6,7 @@ const UnitModel = require("../models/unit.model");
 const TenantModel = require("../models/tenant.model");
 const LeaseModel = require("../models/lease.model");
 const LeaseDocumentModel = require("../models/leaseDocument.model");
+const LeaseDetailModel = require("../models/leaseDetail.model");
 
 const ALLOWED_DOCUMENT_TYPES = ["main lease", "amendment"];
 
@@ -24,6 +25,7 @@ class PortfolioController {
         tenant_name,
         square_ft,
         document_type,
+        lease_details,
       } = req.body;
 
       if (!property_name || !unit_number || !tenant_name || !document_type) {
@@ -37,6 +39,12 @@ class PortfolioController {
       if (!ALLOWED_DOCUMENT_TYPES.includes(document_type)) {
         return res.status(400).json({
           error: "document_type must be either 'main lease' or 'amendment'",
+        });
+      }
+
+      if (!lease_details || typeof lease_details !== "object") {
+        return res.status(400).json({
+          error: "lease_details is required and must be an object",
         });
       }
 
@@ -74,6 +82,15 @@ class PortfolioController {
           user_id: req.user.user_id,
           tenant_id: tenant.insertedId,
           unit_id: unit.insertedId,
+        },
+        session
+      );
+
+      await LeaseDetailModel.create(
+        {
+          user_id: req.user.user_id,
+          lease_id: lease.insertedId,
+          details: lease_details,
         },
         session
       );

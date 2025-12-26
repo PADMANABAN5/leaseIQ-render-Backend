@@ -7,6 +7,9 @@ const UnitModel = require("../models/unit.model");
 const TenantModel = require("../models/tenant.model");
 const LeaseModel = require("../models/lease.model");
 const LeaseDocumentModel = require("../models/leaseDocument.model");
+const LeaseDetailModel = require("../models/leaseDetail.model");
+
+const ALLOWED_DOCUMENT_TYPES = ["main lease", "amendment"];
 
 class UnitController {
   static async createWithLease(req, res) {
@@ -25,6 +28,7 @@ class UnitController {
         square_ft,
         monthly_rent,
         document_type,
+        lease_details,
       } = req.body;
 
       if (!unit_number) {
@@ -35,6 +39,18 @@ class UnitController {
         return res
           .status(400)
           .json({ error: "tenant_id or tenant_name required" });
+      }
+
+      if (!ALLOWED_DOCUMENT_TYPES.includes(document_type)) {
+        return res.status(400).json({
+          error: "Not a valid document_type",
+        });
+      }
+
+      if (!lease_details || typeof lease_details !== "object") {
+        return res.status(400).json({
+          error: "lease_details is required and must be an object",
+        });
       }
 
       session.startTransaction();
@@ -112,34 +128,33 @@ class UnitController {
         session
       );
 
-      //DOCUMENT
-      if (req.file) {
-        if (
-          document_type &&
-          !["main lease", "amendment"].includes(document_type)
-        ) {
-          return res.status(400).json({
-            error: "document_type must be 'main lease' or 'amendment'",
-          });
-        }
+      // LEASE DETAILS
+      await LeaseDetailModel.create(
+        {
+          user_id: req.user.user_id,
+          lease_id: lease.insertedId,
+          details: lease_details,
+        },
+        session
+      );
 
-        uploadedFilePath = await storage.uploadFile({
-          buffer: req.file.buffer,
-          filename: req.file.originalname,
-          mimetype: req.file.mimetype,
-        });
+      //DOCUMENT UPLOAD
+      uploadedFilePath = await storage.uploadFile({
+        buffer: req.file.buffer,
+        filename: req.file.originalname,
+        mimetype: req.file.mimetype,
+      });
 
-        await LeaseDocumentModel.create(
-          {
-            user_id: req.user.user_id,
-            lease_id: lease.insertedId,
-            document_name: req.file.originalname,
-            document_type,
-            file_path: uploadedFilePath,
-          },
-          session
-        );
-      }
+      await LeaseDocumentModel.create(
+        {
+          user_id: req.user.user_id,
+          lease_id: lease.insertedId,
+          document_name: req.file.originalname,
+          document_type,
+          file_path: uploadedFilePath,
+        },
+        session
+      );
 
       await session.commitTransaction();
 
