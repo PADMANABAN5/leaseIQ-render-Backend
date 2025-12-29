@@ -10,7 +10,22 @@ const structure = {
       citation: "",
       amendments: [],
     },
-    floor: {
+    premises: {
+      value: "",
+      citation: "",
+      amendments: [],
+    },
+    zipCode: {
+      value: "",
+      citation: "",
+      amendments: [],
+    },
+    city: {
+      value: "",
+      citation: "",
+      amendments: [],
+    },
+    state: {
       value: "",
       citation: "",
       amendments: [],
@@ -21,6 +36,26 @@ const structure = {
       amendments: [],
     },
     areaUsable: {
+      value: "",
+      citation: "",
+      amendments: [],
+    },
+    commonArea: {
+      value: "",
+      citation: "",
+      amendments: [],
+    },
+    parking: {
+      type: {
+        value: "",
+        citation: "",
+        amendments: [],
+      },
+      value: "",
+      citation: "",
+      amendments: [],
+    },
+    storageArea: {
       value: "",
       citation: "",
       amendments: [],
