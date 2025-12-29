@@ -1,32 +1,52 @@
 const bcrypt = require("bcryptjs");
-const { connectDB } = require("../config/db");
 const { generateToken } = require("../utils/jwt");
-const { ObjectId } = require("mongodb");
+// const { ObjectId } = require("mongodb");
+const UserModel = require("../models/user.model");
+const RoleModel = require("../models/role.model");
 
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, username, password } = req.body;
 
-    if (!email || !password)
-      return res.status(400).json({ message: "Email and password required" });
+    if ((!email && !username) || !password) {
+      return res
+        .status(400)
+        .json({ message: "Email or username and password required" });
+    }
 
-    const db = await connectDB();
+    let user = null;
 
-    const user = await db.collection("users").findOne({ email });
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    if (email) {
+      user = await UserModel.getByEmail(email.toLowerCase());
+    } else if (username) {
+      user = await UserModel.getByUsername(username.toLowerCase());
+    }
+
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    if (!user.is_active) {
+      return res.status(401).json({ message: "Account is deactivated" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
+    if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-    const role = await db
-      .collection("roles")
-      .findOne({ _id: new ObjectId(user.role_id) });
+    const role = await RoleModel.getById(user.role_id);
+
+    if (!role) {
+      return res.status(500).json({ message: "Associated role not found" });
+    }
 
     const token = generateToken({
-      user_id: user._id,
+      user_id: user._id.toString(),
       role: role.role_name,
-      organization_id: user.organization_id,
+      organization_id: user.organization_id
+        ? user.organization_id.toString()
+        : null,
     });
 
     res.json({
@@ -35,12 +55,77 @@ exports.login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        username: user.username,
         role: role.role_name,
         organization_id: user.organization_id,
       },
     });
   } catch (err) {
-    console.error(err);
+    console.error("Login Error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.signup = async (req, res) => {
+  try {
+    const { name, email, username, password } = req.body;
+
+    if (!name?.trim()) {
+      return res.status(400).json({ message: "Name is required" });
+    }
+
+    if (!email?.trim()) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    if (!password) {
+      return res.status(400).json({ message: "Password is required" });
+    }
+
+    const existingEmailUser = await UserModel.getByEmail(email.toLowerCase());
+    if (existingEmailUser) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    let finalUsername;
+    if (username && username.trim()) {
+      const normalizedUsername = username.toLowerCase();
+      const existingUsernameUser = await UserModel.getByUsername(
+        normalizedUsername
+      );
+      if (existingUsernameUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+      finalUsername = normalizedUsername;
+    } else {
+      finalUsername = await UserModel.generateUsername();
+    }
+
+    const role = await RoleModel.getByName("individual");
+
+    if (!role) {
+      return res.status(500).json({ message: "Individual role not found" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const userId = await UserModel.create({
+      name: name.trim(),
+      email: email.toLowerCase(),
+      username: finalUsername,
+      password: hashedPassword,
+      role_id: role._id,
+      organization_id: null,
+    });
+
+    res.status(201).json({
+      message: "Signup successful",
+      user_id: userId,
+      username: finalUsername,
+      email: email.toLowerCase(),
+    });
+  } catch (err) {
+    console.error("Signup Error:", err);
+    res.status(500).json({ message: "Signup failed" });
   }
 };
