@@ -105,6 +105,94 @@ class LeaseController {
       });
     }
   }
+
+  static async uploadDocumentAndUpdateDetails(req, res) {
+    const db = require("../config/db").getDB();
+    const session = db.client.startSession();
+    let uploadedFilePath = null;
+
+    try {
+      let { document_type, lease_details } = req.body;
+
+      if (typeof lease_details === "string") {
+        lease_details = JSON.parse(lease_details);
+      }
+
+      if (!ALLOWED_DOCUMENT_TYPES.includes(document_type)) {
+        return res.status(400).json({
+          error: "document_type must be 'main lease' or 'amendment'",
+        });
+      }
+
+      if (!lease_details || typeof lease_details !== "object") {
+        return res.status(400).json({
+          error: "lease_details object is required",
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({ error: "Document file is required" });
+      }
+
+      session.startTransaction();
+
+      const lease = await LeaseModel.getByIdFull(
+        req.params.id,
+        req.user.user_id
+      );
+
+      if (!lease) {
+        return res.status(404).json({ error: "Lease not found" });
+      }
+
+      uploadedFilePath = await storage.uploadFile({
+        buffer: req.file.buffer,
+        filename: req.file.originalname,
+        mimetype: req.file.mimetype,
+      });
+
+      await LeaseDocumentModel.create(
+        {
+          user_id: req.user.user_id,
+          lease_id: req.params.id,
+          document_name: req.file.originalname,
+          document_type,
+          file_path: uploadedFilePath,
+        },
+        session
+      );
+
+      await LeaseModel.upsertLeaseDetails(
+        req.params.id,
+        req.user.user_id,
+        lease_details
+      );
+
+      await session.commitTransaction();
+
+      return res.status(200).json({
+        message: "Document uploaded and lease details updated successfully",
+      });
+    } catch (err) {
+      await session.abortTransaction();
+
+      // Storage rollback
+      if (uploadedFilePath) {
+        try {
+          await storage.deleteFile(uploadedFilePath);
+        } catch (cleanupErr) {
+          console.error("Storage rollback failed:", cleanupErr);
+        }
+      }
+
+      console.error("Upload Lease Document Error:", err);
+      return res.status(500).json({
+        error: "Failed to upload document and update lease details",
+      });
+    } finally {
+      session.endSession();
+    }
+  }
 }
 
 module.exports = LeaseController;

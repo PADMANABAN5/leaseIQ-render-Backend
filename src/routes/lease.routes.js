@@ -14,4 +14,11 @@ router.post(
   LeaseController.uploadAdditionalDocument
 );
 
+router.post(
+  "/:id/documentsupdate",
+  auth,
+  handleUpload,
+  LeaseController.uploadDocumentAndUpdateDetails
+);
+
 module.exports = router;
