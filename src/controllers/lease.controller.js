@@ -1,3 +1,4 @@
+const { getDB } = require("../config/db");
 const storage = require("../services/storage");
 const LeaseModel = require("../models/lease.model");
 const LeaseDocumentModel = require("../models/leaseDocument.model");
@@ -107,7 +108,7 @@ class LeaseController {
   }
 
   static async uploadDocumentAndUpdateDetails(req, res) {
-    const db = require("../config/db").getDB();
+    const db = getDB();
     const session = db.client.startSession();
     let uploadedFilePath = null;
 
