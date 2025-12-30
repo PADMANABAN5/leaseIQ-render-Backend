@@ -2,11 +2,7 @@ const structure = {
   chargeSchedules: {
     baseRent: [
       {
-        chargeCode: {
-          value: "",
-          citation: "",
-        },
-        description: {
+        period: {
           value: "",
           citation: "",
         },
@@ -27,14 +23,6 @@ const structure = {
           citation: "",
         },
         areaRentable: {
-          value: "",
-          citation: "",
-        },
-        amountPerArea: {
-          value: "",
-          citation: "",
-        },
-        managementFees: {
           value: "",
           citation: "",
         },
