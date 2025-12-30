@@ -17,6 +17,15 @@ class LeaseDocumentModel {
         { session }
       );
   }
+
+  static getById(id, user_id) {
+    return getDB()
+      .collection(COLLECTION)
+      .findOne({
+        _id: new ObjectId(id),
+        user_id: new ObjectId(user_id),
+      });
+  }
 }
 
 module.exports = LeaseDocumentModel;

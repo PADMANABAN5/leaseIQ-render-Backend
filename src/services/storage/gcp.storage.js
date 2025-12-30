@@ -19,3 +19,18 @@ exports.deleteFile = async (filePath) => {
   const file = bucket.file(filePath);
   await file.delete({ ignoreNotFound: true });
 };
+
+exports.getFileStream = async (filePath) => {
+  const file = bucket.file(filePath);
+  return file.createReadStream();
+};
+
+exports.getSignedUrl = async (filePath) => {
+  const [url] = await bucket.file(filePath).getSignedUrl({
+    version: "v4",
+    action: "read",
+    expires: Date.now() + 5 * 60 * 1000,
+  });
+
+  return url;
+};

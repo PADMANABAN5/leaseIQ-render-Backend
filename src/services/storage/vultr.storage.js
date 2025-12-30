@@ -32,3 +32,20 @@ exports.deleteFile = async (key) => {
     })
     .promise();
 };
+
+exports.getFileStream = (key) => {
+  return s3
+    .getObject({
+      Bucket: process.env.VULTR_S3_BUCKET,
+      Key: key,
+    })
+    .createReadStream();
+};
+
+exports.getSignedUrl = async (key) => {
+  return s3.getSignedUrlPromise("getObject", {
+    Bucket: process.env.VULTR_S3_BUCKET,
+    Key: key,
+    Expires: 60 * 5,
+  });
+};
