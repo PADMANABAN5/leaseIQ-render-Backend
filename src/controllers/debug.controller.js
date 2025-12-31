@@ -18,7 +18,7 @@ const {
   cam,
   amendments,
 } = require("../utils/references");
-const { ANALYSIS_CONFIG } = require("../utils/constants");
+const { ANALYSIS_CONFIG, MOCK_LEASE_RESPONSE } = require("../utils/constants");
 const LeaseModel = require("../models/lease.model");
 
 /**
@@ -649,15 +649,18 @@ async function amendmentAnalysis(req, res) {
     // Fetch lease from database using LeaseModel
     let leaseOutput = null;
     try {
-      const lease = await LeaseModel.getByIdFull(leaseId, userId);
-      
-      if (!lease) {
-        return res.status(404).json({ error: "Lease not found" });
+      let lease = await LeaseModel.getByIdFull(leaseId, userId);
+      if (process.env.DEV === "true") {
+        lease = MOCK_LEASE_RESPONSE;
       }
-      return res.json(lease);
-
-      // Extract lease_details if available, otherwise use the full lease object
-      leaseOutput = lease.lease_details?.details || lease;
+      else {
+        if (!lease) {
+          return res.status(404).json({ error: "Lease not found" });
+        }
+        // Extract lease_details if available, otherwise use the full lease object
+        leaseOutput = lease.lease_details?.details || lease;
+      }
+      
     } catch (error) {
       console.error("Error fetching lease:", error);
       return res.status(500).json({
