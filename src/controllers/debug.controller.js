@@ -19,6 +19,7 @@ const {
   amendments,
 } = require("../utils/references");
 const { ANALYSIS_CONFIG } = require("../utils/constants");
+const LeaseModel = require("../models/lease.model");
 
 /**
  * POST /info - Lease abstraction analysis
@@ -629,14 +630,39 @@ async function amendmentAnalysis(req, res) {
             `;
     }
 
-    // Try to find the original lease JSON file
-    const resultantFilename = filename.split(" amendment")[0] + ".pdf.json";
-    const pathToJson = path.join("./results", resultantFilename);
+    // Get lease_id and user_id from headers
+    const leaseId = req.headers["x-lease-id"] || req.headers["lease-id"];
+    const userId = req.user?.user_id || req.headers["x-user-id"] || req.headers["user-id"];
+    console.log(leaseId, userId);
+    if (!leaseId) {
+      return res.status(400).json({
+        error: "lease_id is required in headers (x-lease-id or lease-id)",
+      });
+    }
 
+    if (!userId) {
+      return res.status(400).json({
+        error: "user_id is required (from auth token or x-user-id header)",
+      });
+    }
+
+    // Fetch lease from database using LeaseModel
     let leaseOutput = null;
-    if (fs.existsSync(pathToJson)) {
-      const fileContent = fs.readFileSync(pathToJson, "utf8");
-      leaseOutput = JSON.parse(fileContent);
+    try {
+      const lease = await LeaseModel.getByIdFull(leaseId, userId);
+      
+      if (!lease) {
+        return res.status(404).json({ error: "Lease not found" });
+      }
+      return res.json(lease);
+
+      // Extract lease_details if available, otherwise use the full lease object
+      leaseOutput = lease.lease_details?.details || lease;
+    } catch (error) {
+      console.error("Error fetching lease:", error);
+      return res.status(500).json({
+        error: "Failed to fetch lease from database",
+      });
     }
 
     if (leaseOutput) {
