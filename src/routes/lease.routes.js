@@ -21,4 +21,10 @@ router.post(
   LeaseController.uploadDocumentAndUpdateDetails
 );
 
+router.get(
+  "/:id/details/:documentId",
+  auth,
+  LeaseController.getLeaseDetailsByDocument
+);
+
 module.exports = router;

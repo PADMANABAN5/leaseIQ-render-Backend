@@ -93,28 +93,31 @@ class PortfolioController {
         session
       );
 
-      await LeaseDetailModel.create(
-        {
-          user_id: req.user.user_id,
-          lease_id: lease.insertedId,
-          details: lease_details,
-        },
-        session
-      );
-
       uploadedFilePath = await storage.uploadFile({
         buffer: req.file.buffer,
         filename: req.file.originalname,
         mimetype: req.file.mimetype,
       });
 
-      await LeaseDocumentModel.create(
+      const docResult = await LeaseDocumentModel.create(
         {
           user_id: req.user.user_id,
           lease_id: lease.insertedId,
           document_name: req.file.originalname,
           document_type,
           file_path: uploadedFilePath,
+        },
+        session
+      );
+
+      // Create lease details VERSION 1 (main lease)
+      await LeaseDetailModel.createVersion(
+        {
+          user_id: req.user.user_id,
+          lease_id: lease.insertedId,
+          source_document_id: docResult.insertedId,
+          version: 1,
+          details: lease_details,
         },
         session
       );
@@ -131,7 +134,6 @@ class PortfolioController {
         },
       });
     } catch (err) {
-      // Abort ONLY if transaction started
       if (transactionStarted) {
         try {
           await session.abortTransaction();
@@ -140,7 +142,6 @@ class PortfolioController {
         }
       }
 
-      // STORAGE ROLLBACK
       if (uploadedFilePath) {
         try {
           await storage.deleteFile(uploadedFilePath);
