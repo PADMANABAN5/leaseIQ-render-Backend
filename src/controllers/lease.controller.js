@@ -2,7 +2,24 @@ const { getDB } = require("../config/db");
 const storage = require("../services/storage");
 const LeaseModel = require("../models/lease.model");
 const LeaseDocumentModel = require("../models/leaseDocument.model");
+const LeaseDetailModel = require("../models/leaseDetail.model"); // ✅ NEW
 const ALLOWED_DOCUMENT_TYPES = ["main lease", "amendment"];
+
+// deep merge utility (used ONLY for amendment delta)
+const deepMerge = (target, source) => {
+  for (const key in source) {
+    if (
+      source[key] &&
+      typeof source[key] === "object" &&
+      !Array.isArray(source[key])
+    ) {
+      target[key] = deepMerge(target[key] || {}, source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  }
+  return target;
+};
 
 class LeaseController {
   // GET COMPLETE LEASE
@@ -91,7 +108,6 @@ class LeaseController {
         message: "Document uploaded successfully",
       });
     } catch (err) {
-      //STORAGE ROLLBACK
       if (uploadedFilePath) {
         try {
           await storage.deleteFile(uploadedFilePath);
@@ -152,7 +168,7 @@ class LeaseController {
         mimetype: req.file.mimetype,
       });
 
-      await LeaseDocumentModel.create(
+      const docResult = await LeaseDocumentModel.create(
         {
           user_id: req.user.user_id,
           lease_id: req.params.id,
@@ -163,21 +179,48 @@ class LeaseController {
         session
       );
 
-      await LeaseModel.upsertLeaseDetails(
+      const active = await LeaseDetailModel.getActive(
         req.params.id,
-        req.user.user_id,
-        lease_details
+        req.user.user_id
+      );
+
+      let version = 1;
+      let finalDetails = lease_details;
+
+      if (active) {
+        version = active.version + 1;
+        finalDetails = deepMerge(
+          JSON.parse(JSON.stringify(active.details)),
+          lease_details
+        );
+
+        await LeaseDetailModel.deactivateActive(
+          req.params.id,
+          req.user.user_id,
+          session
+        );
+      }
+
+      await LeaseDetailModel.createVersion(
+        {
+          user_id: req.user.user_id,
+          lease_id: req.params.id,
+          source_document_id: docResult.insertedId,
+          version,
+          details: finalDetails,
+        },
+        session
       );
 
       await session.commitTransaction();
 
       return res.status(200).json({
-        message: "Document uploaded and lease details updated successfully",
+        message: "Document uploaded and lease details versioned successfully",
+        version,
       });
     } catch (err) {
       await session.abortTransaction();
 
-      // Storage rollback
       if (uploadedFilePath) {
         try {
           await storage.deleteFile(uploadedFilePath);
@@ -195,30 +238,43 @@ class LeaseController {
     }
   }
 
-  static async getDocument(req, res) {
+  // GET LEASE DETAILS BY DOCUMENT
+  static async getLeaseDetailsByDocument(req, res) {
     try {
-      const { documentId } = req.params;
+      const { id: leaseId, documentId } = req.params;
 
-      const doc = await LeaseDocumentModel.getById(
+      const lease = await LeaseModel.getByIdFull(leaseId, req.user.user_id);
+
+      if (!lease) {
+        return res.status(404).json({ error: "Lease not found" });
+      }
+
+      const leaseDetails = await LeaseDetailModel.getByDocumentId(
+        leaseId,
         documentId,
         req.user.user_id
       );
 
-      if (!doc) {
-        return res.status(404).json({ error: "Document not found" });
+      if (!leaseDetails) {
+        return res.status(404).json({
+          error: "Lease details not found for this document",
+        });
       }
 
-      const signedUrl = await storage.getSignedUrl(doc.file_path);
-
       return res.json({
-        document_name: doc.document_name,
-        document_type: doc.document_type,
-        url: signedUrl,
-        expires_in: "5 minutes",
+        data: {
+          lease_id: leaseId,
+          document_id: documentId,
+          version: leaseDetails.version,
+          details: leaseDetails.details,
+          created_at: leaseDetails.created_at,
+        },
       });
     } catch (err) {
-      console.error("Get Document Error:", err);
-      return res.status(500).json({ error: "Failed to read document" });
+      console.error("Get Lease Details By Document Error:", err);
+      return res.status(500).json({
+        error: "Failed to fetch lease details",
+      });
     }
   }
 }

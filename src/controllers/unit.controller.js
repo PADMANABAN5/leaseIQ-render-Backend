@@ -33,13 +33,11 @@ class UnitController {
         lease_details,
       } = req.body;
 
-      // Parse lease_details (multipart/form-data sends string)
       if (typeof lease_details === "string") {
         lease_details = JSON.parse(lease_details);
       }
 
-      //Validations
-
+      // Validations
       if (!unit_number) {
         return res.status(400).json({ error: "unit_number is required" });
       }
@@ -144,16 +142,7 @@ class UnitController {
         session
       );
 
-      /* ---------------- LEASE DETAILS ---------------- */
-
-      await LeaseDetailModel.create(
-        {
-          user_id: req.user.user_id,
-          lease_id: lease.insertedId,
-          details: lease_details,
-        },
-        session
-      );
+      //LEASE DOCUMENT
 
       uploadedFilePath = await storage.uploadFile({
         buffer: req.file.buffer,
@@ -161,13 +150,26 @@ class UnitController {
         mimetype: req.file.mimetype,
       });
 
-      await LeaseDocumentModel.create(
+      const docResult = await LeaseDocumentModel.create(
         {
           user_id: req.user.user_id,
           lease_id: lease.insertedId,
           document_name: req.file.originalname,
           document_type,
           file_path: uploadedFilePath,
+        },
+        session
+      );
+
+      // LEASE DETAILS (VERSION 1)
+
+      await LeaseDetailModel.createVersion(
+        {
+          user_id: req.user.user_id,
+          lease_id: lease.insertedId,
+          source_document_id: docResult.insertedId,
+          version: 1,
+          details: lease_details,
         },
         session
       );
@@ -188,7 +190,6 @@ class UnitController {
         await session.abortTransaction();
       }
 
-      // STORAGE ROLLBACK
       if (uploadedFilePath) {
         try {
           await storage.deleteFile(uploadedFilePath);

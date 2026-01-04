@@ -57,6 +57,77 @@ class LeaseDetailModel {
         { session }
       );
   }
+
+  static getActive(lease_id, user_id) {
+    return getDB()
+      .collection(COLLECTION)
+      .findOne({
+        lease_id: new ObjectId(lease_id),
+        user_id: new ObjectId(user_id),
+        is_active: true,
+      });
+  }
+
+  static async getLatestVersion(lease_id, user_id) {
+    const docs = await getDB()
+      .collection(COLLECTION)
+      .find({
+        lease_id: new ObjectId(lease_id),
+        user_id: new ObjectId(user_id),
+      })
+      .sort({ version: -1 })
+      .limit(1)
+      .toArray();
+
+    return docs[0] || null;
+  }
+
+  static deactivateActive(lease_id, user_id, session) {
+    return getDB()
+      .collection(COLLECTION)
+      .updateMany(
+        {
+          lease_id: new ObjectId(lease_id),
+          user_id: new ObjectId(user_id),
+          is_active: true,
+        },
+        {
+          $set: {
+            is_active: false,
+            updated_at: new Date(),
+          },
+        },
+        { session }
+      );
+  }
+
+  static createVersion(data, session) {
+    return getDB()
+      .collection(COLLECTION)
+      .insertOne(
+        {
+          user_id: new ObjectId(data.user_id),
+          lease_id: new ObjectId(data.lease_id),
+          source_document_id: new ObjectId(data.source_document_id),
+          version: data.version,
+          details: data.details,
+          is_active: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+        { session }
+      );
+  }
+
+  static getByDocumentId(lease_id, document_id, user_id) {
+    return getDB()
+      .collection(COLLECTION)
+      .findOne({
+        lease_id: new ObjectId(lease_id),
+        source_document_id: new ObjectId(document_id),
+        user_id: new ObjectId(user_id),
+      });
+  }
 }
 
 module.exports = LeaseDetailModel;
