@@ -277,6 +277,31 @@ class LeaseController {
       });
     }
   }
+
+  // GET LEASE VERSION TIMELINE
+  static async getVersionTimeline(req, res) {
+    try {
+      const leaseId = req.params.id;
+
+      const lease = await LeaseModel.getByIdFull(leaseId, req.user.user_id);
+
+      if (!lease) {
+        return res.status(404).json({ error: "Lease not found" });
+      }
+
+      const timeline = await LeaseDetailModel.getVersionTimeline(
+        leaseId,
+        req.user.user_id
+      );
+
+      return res.json({ data: timeline });
+    } catch (err) {
+      console.error("Get Lease Version Timeline Error:", err);
+      return res.status(500).json({
+        error: "Failed to fetch lease version timeline",
+      });
+    }
+  }
 }
 
 module.exports = LeaseController;

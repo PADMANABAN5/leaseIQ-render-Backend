@@ -128,6 +128,41 @@ class LeaseDetailModel {
         user_id: new ObjectId(user_id),
       });
   }
+
+  static async getVersionTimeline(lease_id, user_id) {
+    return getDB()
+      .collection(COLLECTION)
+      .aggregate([
+        {
+          $match: {
+            lease_id: new ObjectId(lease_id),
+            user_id: new ObjectId(user_id),
+          },
+        },
+        {
+          $lookup: {
+            from: "lease_documents",
+            localField: "source_document_id",
+            foreignField: "_id",
+            as: "document",
+          },
+        },
+        { $unwind: "$document" },
+        {
+          $project: {
+            _id: 0,
+            version: 1,
+            is_active: 1,
+            created_at: 1,
+            document_id: "$document._id",
+            document_name: "$document.document_name",
+            document_type: "$document.document_type",
+          },
+        },
+        { $sort: { version: -1 } },
+      ])
+      .toArray();
+  }
 }
 
 module.exports = LeaseDetailModel;
