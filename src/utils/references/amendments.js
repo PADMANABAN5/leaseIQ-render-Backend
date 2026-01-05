@@ -92,7 +92,7 @@ If an amendment changes the rentable area from "10,000 sq ft" to "12,000 sq ft":
 \`\`\`
 
 ## Important Notes
-- If no changes are found in the amendment, return the original data unchanged
+- IF NO CHANGES ARE FOUND IN THE AMENDMENT, RETURN THE ORIGINAL DATA UNCHANGED
 - Always maintain the exact JSON structure provided
 - Be precise with citations and page references
 - Ensure all amendment entries are complete and accurate
