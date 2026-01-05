@@ -302,6 +302,33 @@ class LeaseController {
       });
     }
   }
+
+  static async getDocument(req, res) {
+    try {
+      const { documentId } = req.params;
+
+      const doc = await LeaseDocumentModel.getById(
+        documentId,
+        req.user.user_id
+      );
+
+      if (!doc) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      const signedUrl = await storage.getSignedUrl(doc.file_path);
+
+      return res.json({
+        document_name: doc.document_name,
+        document_type: doc.document_type,
+        url: signedUrl,
+        expires_in: "5 minutes",
+      });
+    } catch (err) {
+      console.error("Get Document Error:", err);
+      return res.status(500).json({ error: "Failed to read document" });
+    }
+  }
 }
 
 module.exports = LeaseController;

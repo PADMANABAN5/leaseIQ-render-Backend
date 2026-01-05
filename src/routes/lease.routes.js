@@ -29,4 +29,7 @@ router.get(
 
 router.get("/:id/versions", auth, LeaseController.getVersionTimeline);
 
+// read lease document
+router.get("/document/:documentId", auth, LeaseController.getDocument);
+
 module.exports = router;
