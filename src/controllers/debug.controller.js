@@ -651,7 +651,7 @@ async function amendmentAnalysis(req, res) {
     try {
       let lease = await LeaseModel.getByIdFull(leaseId, userId);
       if (process.env.DEV === "true") {
-        lease = MOCK_LEASE_RESPONSE;
+        lease = MOCK_LEASE_RESPONSE.lease_details.details;
       }
       else {
         if (!lease) {

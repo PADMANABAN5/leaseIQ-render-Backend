@@ -32,6 +32,7 @@ class GroqAdapter extends BaseLLMAdapter {
         model: this.model,
         messages: messages,
         temperature: 0.7,
+        max_completion_tokens: 50000,
       });
 
       // Format response to match Python structure
