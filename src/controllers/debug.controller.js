@@ -608,7 +608,6 @@ async function amendmentAnalysis(req, res) {
         error: { asset: "is invalid" },
       });
     }
-
     const filename = req.file.originalname;
     const fileContent = req.file.buffer;
 
@@ -651,7 +650,7 @@ async function amendmentAnalysis(req, res) {
     try {
       let lease = await LeaseModel.getByIdFull(leaseId, userId);
       if (process.env.DEV === "true") {
-        lease = MOCK_LEASE_RESPONSE.lease_details.details;
+        leaseOutput = MOCK_LEASE_RESPONSE;
       }
       else {
         if (!lease) {
@@ -682,7 +681,8 @@ async function amendmentAnalysis(req, res) {
       { role: "system", content: amendments.system },
       { role: "user", content: data },
     ];
-
+    
+    
     const response = await llmAdapter.get_non_streaming_response(payload);
     const messageContent = response.choices[0].message.content;
 
