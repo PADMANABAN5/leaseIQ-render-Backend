@@ -57,6 +57,10 @@ class OrganizationModel {
       .collection(COLLECTION)
       .deleteOne({ _id: new ObjectId(id) });
   }
+
+  static async getByName(name) {
+    return getDB().collection(COLLECTION).findOne({ name: name.trim() });
+  }
 }
 
 module.exports = OrganizationModel;

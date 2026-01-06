@@ -5,23 +5,24 @@ const RoleModel = require("../models/role.model");
 class UserController {
   static async create(req, res) {
     try {
-      const { name, email, username,password, role_name, organization_id } = req.body;
-      if(!email && !username) {
+      const { name, email, username, password, role_name, organization_id } =
+        req.body;
+      if (!email && !username) {
         return res.status(400).json({
           error: "Either email or username is required",
         });
       }
       let finalUsername;
-      if(username && username.trim()){
+      if (username && username.trim()) {
         const normalizedUsername = username.toLowerCase();
-        
+
         const existingUser = await UserModel.getByUsername(normalizedUsername);
         if (existingUser) {
           return res.status(400).json({ error: "Username already exists" });
         }
-        finalUsername=normalizedUsername;        
-      }else{
-        finalUsername=await UserModel.generateUsername();;
+        finalUsername = normalizedUsername;
+      } else {
+        finalUsername = await UserModel.generateUsername();
       }
 
       if (email) {
@@ -30,7 +31,6 @@ class UserController {
           return res.status(400).json({ error: "Email already exists" });
         }
       }
-      
 
       if (!password) {
         return res.status(400).json({ error: "Password is required" });
@@ -42,7 +42,7 @@ class UserController {
         req.user.role === "org_admin"
           ? req.user.organization_id
           : organization_id;
-       
+
       const role = await RoleModel.getByName(role_name);
 
       if (!role) {
@@ -128,6 +128,70 @@ class UserController {
     } catch (err) {
       console.error("User Delete Error:", err);
       return res.status(500).json({ error: "Failed to delete user" });
+    }
+  }
+
+  static async getPending(req, res) {
+    try {
+      if (req.user.role !== "org_admin") {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const result = await UserModel.getAll({
+        organization_id: req.user.organization_id,
+        status: "pending_approval",
+        page: Number(req.query.page) || 1,
+        limit: Number(req.query.limit) || 10,
+      });
+
+      return res.json(result);
+    } catch (err) {
+      console.error("User GetPending Error:", err);
+      return res.status(500).json({ error: "Failed to fetch pending users" });
+    }
+  }
+
+  static async reviewUser(req, res) {
+    try {
+      const { id } = req.params;
+      const { action } = req.body; // "approve" or "reject"
+
+      if (!["approve", "reject"].includes(action)) {
+        return res
+          .status(400)
+          .json({ error: "Invalid action. Use 'approve' or 'reject'" });
+      }
+
+      const user = await UserModel.getById(id);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Note: org_admin can only review users in their own org
+      if (
+        req.user.role === "org_admin" &&
+        String(user.organization_id) !== String(req.user.organization_id)
+      ) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      // Only pending users can be reviewed
+      if (user.status !== "pending_approval") {
+        return res.status(400).json({ error: "User is not pending approval" });
+      }
+
+      const newStatus = action === "approve" ? "active" : "rejected";
+
+      await UserModel.update(id, { status: newStatus });
+
+      return res.json({
+        success: true,
+        message: `User ${action}d successfully`,
+        status: newStatus,
+      });
+    } catch (err) {
+      console.error("User Review Error:", err);
+      return res.status(500).json({ error: "Failed to review user" });
     }
   }
 }

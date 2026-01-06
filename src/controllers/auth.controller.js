@@ -129,3 +129,104 @@ exports.signup = async (req, res) => {
     res.status(500).json({ message: "Signup failed" });
   }
 };
+
+exports.orgSignup = async (req, res) => {
+  try {
+    const { name, email, username, password, org_option, org_name } = req.body;
+
+    // Validations
+    if (
+      !name?.trim() ||
+      !email?.trim() ||
+      !password ||
+      !org_option ||
+      !org_name?.trim()
+    ) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Check if email exists
+    const existingUser = await UserModel.getByEmail(email.toLowerCase());
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    // Generate username if not provided
+    const finalUsername = username?.trim()
+      ? username.toLowerCase()
+      : await UserModel.generateUsername();
+
+    if (username?.trim()) {
+      const existingUsername = await UserModel.getByUsername(finalUsername);
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    if (org_option === "create_new") {
+      // === CASE 1: Create new organization + become org_admin ===
+
+      const orgResult = await OrganizationModel.create({
+        name: org_name.trim(),
+      });
+      const orgId = orgResult._id;
+
+      const orgAdminRole = await RoleModel.getByName("org_admin");
+      if (!orgAdminRole) {
+        return res.status(500).json({ message: "org_admin role not found" });
+      }
+
+      const userId = await UserModel.create({
+        name: name.trim(),
+        email: email.toLowerCase(),
+        username: finalUsername,
+        password: hashedPassword,
+        role_id: orgAdminRole._id,
+        organization_id: orgId,
+        status: "active", // default active
+      });
+
+      return res.status(201).json({
+        message: "Organization created successfully. You are now the admin.",
+        organization_id: orgId,
+        user_id: userId,
+      });
+    } else if (org_option === "join_existing") {
+      // === CASE 2: Request to join existing organization ===
+
+      // assuming org_name is unique Case sensitive (confirm with Surya)
+      const org = await OrganizationModel.getByName(org_name.trim());
+      if (!org) {
+        return res.status(404).json({ message: "Organization not found" });
+      }
+
+      const userRole = await RoleModel.getByName("user");
+      if (!userRole) {
+        return res.status(500).json({ message: "user role not found" });
+      }
+
+      const userId = await UserModel.create({
+        name: name.trim(),
+        email: email.toLowerCase(),
+        username: finalUsername,
+        password: hashedPassword,
+        role_id: userRole._id,
+        organization_id: org._id,
+        status: "pending_approval", // waits for approval
+      });
+
+      return res.status(201).json({
+        message:
+          "Signup request sent. Waiting for organization admin approval.",
+        user_id: userId,
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid organization option" });
+    }
+  } catch (err) {
+    console.error("Org Signup Error:", err);
+    res.status(500).json({ message: "Signup failed" });
+  }
+};

@@ -8,29 +8,31 @@ class UserModel {
   static async create(data) {
     const payload = {
       name: data.name,
-      email: data.email? data.email.toLowerCase():null,
-      username: data.username ? data.username.toLowerCase():null,
+      email: data.email ? data.email.toLowerCase() : null,
+      username: data.username ? data.username.toLowerCase() : null,
       password: data.password,
       role_id: new ObjectId(data.role_id),
       organization_id: data.organization_id
         ? new ObjectId(data.organization_id)
         : null,
       is_active: true,
+      status: data.status || "active",
       created_at: new Date(),
     };
 
-    const result = await getDB()
-      .collection(COLLECTION)
-      .insertOne(payload);
+    const result = await getDB().collection(COLLECTION).insertOne(payload);
 
     return result.insertedId;
   }
 
   // ---------------- GET ALL ----------------
-  static async getAll({ organization_id, page = 1, limit = 10 }) {
+  static async getAll({ organization_id, page = 1, limit = 10, status }) {
     const query = {};
     if (organization_id) {
       query.organization_id = new ObjectId(organization_id);
+    }
+    if (status) {
+      query.status = status;
     }
 
     const skip = (page - 1) * limit;
@@ -42,23 +44,21 @@ class UserModel {
       .limit(limit)
       .toArray();
 
-    const total = await getDB()
-      .collection(COLLECTION)
-      .countDocuments(query);
+    const total = await getDB().collection(COLLECTION).countDocuments(query);
 
     return { data, total, page, limit };
   }
 
   // ---------------- LOOKUPS ----------------
   static async getByUsername(username) {
-    if(!username) return null;
+    if (!username) return null;
     return getDB()
       .collection(COLLECTION)
       .findOne({ username: username.toLowerCase() });
   }
 
   static async getByEmail(email) {
-    if(!email) return null;
+    if (!email) return null;
     return getDB()
       .collection(COLLECTION)
       .findOne({ email: email.toLowerCase() });
@@ -85,10 +85,7 @@ class UserModel {
 
     if (lastUser.length > 0 && lastUser[0].username) {
       const lastUsername = lastUser[0].username;
-      const numericPart = parseInt(
-        lastUsername.replace(prefix, ""),
-        10
-      );
+      const numericPart = parseInt(lastUsername.replace(prefix, ""), 10);
 
       if (!isNaN(numericPart)) {
         nextNumber = numericPart + 1;
@@ -100,23 +97,18 @@ class UserModel {
 
   // ---------------- UPDATE ----------------
   static async update(id, data) {
-    const allowedFields = ["name", "email", "is_active"];
+    const allowedFields = ["name", "email", "is_active", "status"];
     const updateData = {};
 
     allowedFields.forEach((key) => {
       if (data[key] !== undefined) {
-        updateData[key] = key === "email"
-          ? data[key].toLowerCase()
-          : data[key];
+        updateData[key] = key === "email" ? data[key].toLowerCase() : data[key];
       }
     });
 
     return getDB()
       .collection(COLLECTION)
-      .updateOne(
-        { _id: new ObjectId(id) },
-        { $set: updateData }
-      );
+      .updateOne({ _id: new ObjectId(id) }, { $set: updateData });
   }
 
   // ---------------- DELETE ----------------

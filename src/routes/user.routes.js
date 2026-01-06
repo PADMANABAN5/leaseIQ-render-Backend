@@ -30,4 +30,19 @@ router.delete(
   UserController.delete
 );
 
+//Approval flow routes
+router.get(
+  "/pending",
+  auth,
+  allowRoles("org_admin"),
+  UserController.getPending
+);
+
+router.patch(
+  "/:id/review",
+  auth,
+  allowRoles("org_admin", "super_admin"),
+  UserController.reviewUser
+);
+
 module.exports = router;
