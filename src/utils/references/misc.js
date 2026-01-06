@@ -16,6 +16,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high" 
     },
     taxes: {
       synopsis: {
@@ -38,6 +39,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     operatingExpenses: {
       synopsis: {
@@ -75,6 +77,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     repairsAndMaintenance: {
       synopsis: {
@@ -87,6 +90,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     alterations: {
       synopsis: {
@@ -94,6 +98,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     signs: {
       synopsis: {
@@ -101,6 +106,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     services: {
       synopsis: {
@@ -120,6 +126,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     casualty: {
       synopsis: {
@@ -127,6 +134,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     liabilityAndIndemnification: {
       synopsis: {
@@ -134,6 +142,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     use: {
       synopsis: {
@@ -141,6 +150,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     landlordsRightOfEntry: {
       synopsis: {
@@ -148,6 +158,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     assignmentAndSubletting: {
       synopsis: {
@@ -155,6 +166,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     parking: {
       synopsis: {
@@ -162,6 +174,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     condemnation: {
       synopsis: {
@@ -169,6 +182,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     holdover: {
       synopsis: {
@@ -176,6 +190,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     quietEnjoyment: {
       synopsis: {
@@ -183,6 +198,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     defaultAndRemedies: {
       synopsis: {
@@ -190,6 +206,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     subordination: {
       synopsis: {
@@ -197,6 +214,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     liens: {
       synopsis: {
@@ -204,6 +222,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     hazardousMaterials: {
       synopsis: {
@@ -211,6 +230,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     rulesAndRegulations: {
       synopsis: {
@@ -218,6 +238,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     brokerage: {
       synopsis: {
@@ -225,6 +246,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     estoppel: {
       synopsis: {
@@ -232,6 +254,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     notices: {
       synopsis: {
@@ -239,6 +262,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     rightOfFirstRefusalOffer: {
       synopsis: {
@@ -246,6 +270,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     expansionAndRelocation: {
       synopsis: {
@@ -253,6 +278,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
     landlordDefault: {
       synopsis: {
@@ -260,6 +286,7 @@ const structure = {
         citation: "",
         amendments: [],
       },
+      certainty: "low/medium/high",
     },
   },
 };
