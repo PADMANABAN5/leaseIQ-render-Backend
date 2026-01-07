@@ -657,7 +657,7 @@ async function amendmentAnalysis(req, res) {
           return res.status(404).json({ error: "Lease not found" });
         }
         // Extract lease_details if available, otherwise use the full lease object
-        leaseOutput = leaseOutput
+        leaseOutput = lease
       }
       
     } catch (error) {
@@ -688,6 +688,50 @@ async function amendmentAnalysis(req, res) {
 
     const messageDict = parseLLMResponse(messageContent);
 
+    // Check if the response is the full lease object structure
+    // If it has lease_details.details, use it directly
+    if (messageDict && messageDict.lease_details && messageDict.lease_details.details) {
+      return res.json(messageDict);
+    }
+
+    // Otherwise, the LLM returned just the updated sections at top level
+    // Merge them into leaseOutput.lease_details.details
+    if (leaseOutput && messageDict) {
+      // Ensure lease_details.details exists
+      if (!leaseOutput.lease_details) {
+        leaseOutput.lease_details = {
+          _id: leaseOutput._id ? `${leaseOutput._id}_details` : null,
+          user_id: leaseOutput.user_id,
+          lease_id: leaseOutput._id,
+          details: {}
+        };
+      }
+      if (!leaseOutput.lease_details.details) {
+        leaseOutput.lease_details.details = {};
+      }
+
+      // Merge the updated sections into lease_details.details
+      const sectionsToMerge = ['info', 'space', 'charge-schedules', 'misc', 'audit'];
+      for (const section of sectionsToMerge) {
+        if (messageDict[section]) {
+          leaseOutput.lease_details.details[section] = messageDict[section];
+        }
+      }
+
+      // Preserve existing cam-single if it exists and wasn't updated
+      if (leaseOutput.lease_details.details['cam-single'] && !messageDict['cam-single']) {
+        // Keep existing cam-single
+      } else if (messageDict['cam-single']) {
+        leaseOutput.lease_details.details['cam-single'] = messageDict['cam-single'];
+      }
+
+      // Update the updated_at timestamp
+      leaseOutput.updated_at = new Date().toISOString();
+
+      return res.json(leaseOutput);
+    }
+
+    // Fallback: return the messageDict as-is if leaseOutput is not available
     return res.json(messageDict);
   } catch (error) {
     console.error("Error in amendmentAnalysis:", error);

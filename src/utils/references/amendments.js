@@ -57,6 +57,11 @@ Each amendment entry should follow this format:
 - Keep the original citation information in the amendment entry
 
 ### 5. Output Requirements
+- **CRITICAL**: You must return the COMPLETE lease object structure, not just the updated sections
+- The response must maintain the full lease structure with all top-level fields (_id, user_id, tenant_id, unit_id, tenant, unit, property, documents, lease_details, etc.)
+- All updated sections (info, space, charge-schedules, misc, audit) MUST be nested inside lease_details.details
+- The structure should match: lease_details.details.info, lease_details.details.space, lease_details.details["charge-schedules"], lease_details.details.misc, lease_details.details.audit
+- Preserve existing lease_details.details["cam-single"] if present
 - Return the complete updated JSON structure
 - Ensure all fields maintain their original structure
 - Only modify fields that are explicitly changed in the amendment
@@ -91,8 +96,58 @@ If an amendment changes the rentable area from "10,000 sq ft" to "12,000 sq ft":
 }
 \`\`\`
 
+## Output Structure Requirements
+
+### CRITICAL: Full Lease Object Structure
+Your response MUST return the complete lease object, not just the updated sections. The structure must be:
+
+JSON Structure:
+{
+  "_id": "lease_id",
+  "user_id": "user_id",
+  "tenant_id": "tenant_id",
+  "unit_id": "unit_id",
+  "start_date": null,
+  "end_date": null,
+  "created_at": "timestamp",
+  "tenant": {...},
+  "unit": {...},
+  "property": {...},
+  "documents": [...],
+  "lease_details": {
+    "_id": "lease_details_id",
+    "user_id": "user_id",
+    "lease_id": "lease_id",
+    "details": {
+      "cam-single": {...},
+      "info": {
+        "leaseInformation": {...}
+      },
+      "space": {
+        "space": {...}
+      },
+      "charge-schedules": {
+        "chargeSchedules": {...}
+      },
+      "misc": {
+        "otherLeaseProvisions": {...}
+      },
+      "audit": {
+        "audit_checklist": [...]
+      }
+    }
+  },
+  "updated_at": "timestamp"
+}
+
+**IMPORTANT**: 
+- All sections (info, space, charge-schedules, misc, audit) MUST be inside lease_details.details
+- Do NOT return these sections at the top level
+- Preserve ALL existing fields from the original lease object
+- Only update the fields that have been changed by the amendment
+
 ## Important Notes
-- IF NO CHANGES ARE FOUND IN THE AMENDMENT, RETURN THE ORIGINAL DATA UNCHANGED
+- IF NO CHANGES ARE FOUND IN THE AMENDMENT, RETURN THE ORIGINAL DATA UNCHANGED (with full structure)
 - Always maintain the exact JSON structure provided
 - Be precise with citations and page references
 - Ensure all amendment entries are complete and accurate
