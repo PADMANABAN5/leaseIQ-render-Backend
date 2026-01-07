@@ -657,7 +657,7 @@ async function amendmentAnalysis(req, res) {
           return res.status(404).json({ error: "Lease not found" });
         }
         // Extract lease_details if available, otherwise use the full lease object
-        leaseOutput = lease.lease_details?.details || lease;
+        leaseOutput = leaseOutput
       }
       
     } catch (error) {
@@ -666,7 +666,7 @@ async function amendmentAnalysis(req, res) {
         error: "Failed to fetch lease from database",
       });
     }
-
+    console.log(leaseOutput);
     if (leaseOutput) {
       data += `\n\n
         Here is the Lease Abstraction uptil now : 
