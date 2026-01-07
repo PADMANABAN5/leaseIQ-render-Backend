@@ -4,7 +4,7 @@ const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
 
-    const allowedOrigins = ["http://localhost:3000", "http://localhost:5173"];
+    const allowedOrigins = ["http://localhost:3000", "http://localhost:5173","https://leaseiq-frontend-ew2h.onrender.com"];
 
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
