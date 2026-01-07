@@ -691,6 +691,10 @@ async function amendmentAnalysis(req, res) {
     // Check if the response is the full lease object structure
     // If it has lease_details.details, use it directly
     if (messageDict && messageDict.lease_details && messageDict.lease_details.details) {
+      // Ensure filename is added to lease_details.details
+      if (!messageDict.lease_details.details.filename) {
+        messageDict.lease_details.details.filename = filename;
+      }
       return res.json(messageDict);
     }
 
@@ -725,6 +729,9 @@ async function amendmentAnalysis(req, res) {
         leaseOutput.lease_details.details['cam-single'] = messageDict['cam-single'];
       }
 
+      // Add filename to lease_details.details
+      leaseOutput.lease_details.details.filename = filename;
+
       // Update the updated_at timestamp
       leaseOutput.updated_at = new Date().toISOString();
 
@@ -732,6 +739,12 @@ async function amendmentAnalysis(req, res) {
     }
 
     // Fallback: return the messageDict as-is if leaseOutput is not available
+    // Ensure filename is added if messageDict has lease_details.details structure
+    if (messageDict && messageDict.lease_details && messageDict.lease_details.details) {
+      if (!messageDict.lease_details.details.filename) {
+        messageDict.lease_details.details.filename = filename;
+      }
+    }
     return res.json(messageDict);
   } catch (error) {
     console.error("Error in amendmentAnalysis:", error);
