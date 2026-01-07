@@ -3,6 +3,7 @@ const { generateToken } = require("../utils/jwt");
 // const { ObjectId } = require("mongodb");
 const UserModel = require("../models/user.model");
 const RoleModel = require("../models/role.model");
+const OrganizationModel = require("../models/organization.model");
 
 exports.login = async (req, res) => {
   try {
